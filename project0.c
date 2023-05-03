@@ -76,7 +76,7 @@ void PortEIntHandler(void) {
     // Clear Interrupt flag
     MAP_GPIOIntClear(GPIO_PORTE_BASE, GPIO_INT_PIN_1);
 
-    if (MAP_GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_2) == 0x4) {
+    if (MAP_GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_2) == 0x4 && g_ui32RunningState) {
         StartTimer();
     }
 
@@ -235,7 +235,6 @@ void Timer5IntHandler(void) {
 }
 
 void I10ToA(uint32_t value, char* result) {
-
     int base = 10;
     char* ptr = result, *ptr1 = result, tmp_char;
     int tmp_value;
@@ -271,9 +270,8 @@ void UARTSend(const char *pui8Buffer, uint32_t ui32Count) {
 // Handle UART commands
 //*****************************************************************************
 void ReadDelay() {
-    char returnValue[12] = "          \012\015";
-
-    if (g_ui32UARTCommand[1] == '0') {
+    char returnValue[12] = "\0\0\0\0\0\0\0\0\0\0\0\0";
+    if        (g_ui32UARTCommand[1] == '0') {
         I10ToA(g_ui32Delay0, returnValue);
     } else if (g_ui32UARTCommand[1] == '1') {
         I10ToA(g_ui32Delay1, returnValue);
@@ -287,10 +285,12 @@ void ReadDelay() {
         I10ToA(g_ui32Delay5, returnValue);
     } else {}
     UARTSend(returnValue, 12);
+    MAP_UARTCharPutNonBlocking(UART0_BASE, '\12');
+    MAP_UARTCharPutNonBlocking(UART0_BASE, '\15');
 }
 
 void WriteDelay() {uint8_t i = 0;
-    char returnValue[12] = "          \012\015";
+    char returnValue[12] = "            ";
     char inputValue[5] = "     ";
 
     for (i = 0; i < 5; i++) inputValue[i] = (char) g_ui32UARTCommand[i + 3];
@@ -318,18 +318,13 @@ void WriteDelay() {uint8_t i = 0;
 
 void PauseTrigger() {
     g_ui32RunningState = false;
-    MAP_GPIOIntDisable(GPIO_PORTE_BASE, GPIO_INT_PIN_1);
 }
 
 void UnpauseTrigger() {
     g_ui32RunningState = true;
-    MAP_GPIOIntEnable(GPIO_PORTE_BASE, GPIO_INT_PIN_1);
 }
 
 void HandleCommand() {
-    MAP_UARTCharPutNonBlocking(UART0_BASE, 10);
-    MAP_UARTCharPutNonBlocking(UART0_BASE, 13);
-
     if (g_ui32UARTCommand[0] == 'R') {
         ReadDelay();
     } else if (g_ui32UARTCommand[0] == 'W') {
@@ -357,7 +352,6 @@ void UARTIntHandler(void) {
     while (MAP_UARTCharsAvail(UART0_BASE)) {
         uint32_t received = MAP_UARTCharGetNonBlocking(UART0_BASE);
         if (received != 13) {
-            MAP_UARTCharPutNonBlocking(UART0_BASE, received);
             if (g_ui32UARTCommandIndex < COMMAND_LENGTH) {
                 g_ui32UARTCommand[g_ui32UARTCommandIndex] = received;
                 g_ui32UARTCommandIndex++;
