@@ -249,7 +249,7 @@ void I10ToA(uint32_t value, char* result) {
 
     // Apply negative sign
     if (tmp_value < 0) *ptr++ = '-';
-    *ptr-- = '\0';
+    *ptr-- = ' ';
     while (ptr1 < ptr) {
         tmp_char = *ptr;
         *ptr--= *ptr1;
@@ -271,7 +271,7 @@ void UARTSend(const char *pui8Buffer, uint32_t ui32Count) {
 // Handle UART commands
 //*****************************************************************************
 void ReadDelay() {
-    char returnValue[RETURNED_LENGTH] = "    \0";
+    char returnValue[RETURNED_LENGTH] = "     ";
     if        (g_ui32UARTCommand[1] == '0') {
         I10ToA(g_ui32Delay0, returnValue);
     } else if (g_ui32UARTCommand[1] == '1') {
@@ -289,29 +289,21 @@ void ReadDelay() {
 }
 
 void WriteDelay() {uint8_t i = 0;
-    char returnValue[12] = "            ";
-    char inputValue[5]   = "     ";
-    for (i = 0; i < 5; i++) inputValue[i] = (char) g_ui32UARTCommand[i + 3];
-    if (g_ui32UARTCommand[1] == '0') {
+    char inputValue[6]   = "      ";
+    for (i = 0; i < 6; i++) inputValue[i] = (char) g_ui32UARTCommand[i + 3];
+    if        (g_ui32UARTCommand[1] == '0') {
         g_ui32Delay0 = atoi(inputValue);
-        I10ToA(g_ui32Delay0, returnValue);
     } else if (g_ui32UARTCommand[1] == '1') {
         g_ui32Delay1 = atoi(inputValue);
-        I10ToA(g_ui32Delay1, returnValue);
     } else if (g_ui32UARTCommand[1] == '2') {
         g_ui32Delay2 = atoi(inputValue);
-        I10ToA(g_ui32Delay2, returnValue);
     } else if (g_ui32UARTCommand[1] == '3') {
         g_ui32Delay3 = atoi(inputValue);
-        I10ToA(g_ui32Delay3, returnValue);
     } else if (g_ui32UARTCommand[1] == '4') {
         g_ui32Delay4 = atoi(inputValue);
-        I10ToA(g_ui32Delay4, returnValue);
     } else if (g_ui32UARTCommand[1] == '5') {
         g_ui32Delay5 = atoi(inputValue);
-        I10ToA(g_ui32Delay5, returnValue);
     } else {}
-    UARTSend(returnValue, 12);
 }
 
 void HandleCommand() {
