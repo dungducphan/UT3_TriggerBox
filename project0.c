@@ -15,7 +15,9 @@
 #include "driverlib/timer.h"
 #include "driverlib/uart.h"
 
-#define COMMAND_LENGTH 20
+#define COMMAND_LENGTH  10
+#define RETURNED_LENGTH 5
+#define RETURN_SYMBOL   13
 
 //*****************************************************************************
 // Global variables
@@ -235,7 +237,7 @@ void Timer5IntHandler(void) {
 }
 
 void I10ToA(uint32_t value, char* result) {
-    int base = 10;
+    uint32_t base = 10;
     char* ptr = result, *ptr1 = result, tmp_char;
     int tmp_value;
 
@@ -259,7 +261,6 @@ void I10ToA(uint32_t value, char* result) {
 // Send a string to the UART.
 //*****************************************************************************
 void UARTSend(const char *pui8Buffer, uint32_t ui32Count) {
-    // Loop while there are more characters to send.
     while (ui32Count--) {
         // Write the next character to the UART.
         MAP_UARTCharPutNonBlocking(UART0_BASE, *pui8Buffer++);
@@ -270,7 +271,7 @@ void UARTSend(const char *pui8Buffer, uint32_t ui32Count) {
 // Handle UART commands
 //*****************************************************************************
 void ReadDelay() {
-    char returnValue[12] = "\0\0\0\0\0\0\0\0\0\0\0\0";
+    char returnValue[RETURNED_LENGTH] = "    \0";
     if        (g_ui32UARTCommand[1] == '0') {
         I10ToA(g_ui32Delay0, returnValue);
     } else if (g_ui32UARTCommand[1] == '1') {
@@ -284,15 +285,12 @@ void ReadDelay() {
     } else if (g_ui32UARTCommand[1] == '5') {
         I10ToA(g_ui32Delay5, returnValue);
     } else {}
-    UARTSend(returnValue, 12);
-    MAP_UARTCharPutNonBlocking(UART0_BASE, '\12');
-    MAP_UARTCharPutNonBlocking(UART0_BASE, '\15');
+    UARTSend(returnValue, RETURNED_LENGTH);
 }
 
 void WriteDelay() {uint8_t i = 0;
     char returnValue[12] = "            ";
-    char inputValue[5] = "     ";
-
+    char inputValue[5]   = "     ";
     for (i = 0; i < 5; i++) inputValue[i] = (char) g_ui32UARTCommand[i + 3];
     if (g_ui32UARTCommand[1] == '0') {
         g_ui32Delay0 = atoi(inputValue);
@@ -316,23 +314,15 @@ void WriteDelay() {uint8_t i = 0;
     UARTSend(returnValue, 12);
 }
 
-void PauseTrigger() {
-    g_ui32RunningState = false;
-}
-
-void UnpauseTrigger() {
-    g_ui32RunningState = true;
-}
-
 void HandleCommand() {
-    if (g_ui32UARTCommand[0] == 'R') {
+    if        (g_ui32UARTCommand[0] == 'R') {
         ReadDelay();
     } else if (g_ui32UARTCommand[0] == 'W') {
         WriteDelay();
-    } else if (g_ui32UARTCommand[0] == 'P' && g_ui32RunningState) {
-        PauseTrigger();
-    } else if (g_ui32UARTCommand[0] == 'S' && !g_ui32RunningState) {
-        UnpauseTrigger();
+    } else if (g_ui32UARTCommand[0] == 'P') {
+        g_ui32RunningState = false;
+    } else if (g_ui32UARTCommand[0] == 'S') {
+        g_ui32RunningState = true;
     }
 
     ResetUARTCommand();
@@ -342,16 +332,13 @@ void HandleCommand() {
 // The UART interrupt handler.
 //*****************************************************************************
 void UARTIntHandler(void) {
-    // Get the interrupt status.
-    uint32_t ui32Status = MAP_UARTIntStatus(UART0_BASE, true);
-
     // Clear the asserted interrupts.
-    MAP_UARTIntClear(UART0_BASE, ui32Status);
+    MAP_UARTIntClear(UART0_BASE, MAP_UARTIntStatus(UART0_BASE, true));
 
     // Loop while there are characters in the receive FIFO.
     while (MAP_UARTCharsAvail(UART0_BASE)) {
         uint32_t received = MAP_UARTCharGetNonBlocking(UART0_BASE);
-        if (received != 13) {
+        if (received != RETURN_SYMBOL) {
             if (g_ui32UARTCommandIndex < COMMAND_LENGTH) {
                 g_ui32UARTCommand[g_ui32UARTCommandIndex] = received;
                 g_ui32UARTCommandIndex++;
