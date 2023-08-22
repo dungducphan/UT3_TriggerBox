@@ -77,12 +77,14 @@ void PortEIntHandler(void) {
     // Clear Interrupt flag
     MAP_GPIOIntClear(GPIO_PORTE_BASE, GPIO_INT_PIN_1);
 
+    // Every time PE1 change state from LOW to HIGH, an interrupt is issued
+    // If PE2 is at HIGH state and the TriggerBox is in RUNNING_STATE, timers will be started
     if (MAP_GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_2) == 0x4 && g_ui32RunningState) {
         StartTimer();
     }
 
-    MAP_GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5, 0x0);
-    MAP_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6, 0x0);
+    // Reset pins B[0-7] and D[0-3]
+    MAP_GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 0x0);
     MAP_GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3, 0x0);
 }
 
@@ -99,9 +101,6 @@ void ConfigureIOPorts() {
     // Configure the pins E1, E2 to be the input clocks
     MAP_GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_1 | GPIO_PIN_2);
 
-    // Configure the pins E3, E4, E5 to be the fan-out signals
-    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTE_BASE, GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5);
-
     // Enable pin PE1 to work as the 10Hz signal
     // When this PE1 goes from low to high, an interrupt will be issued
     MAP_GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_1);
@@ -109,14 +108,14 @@ void ConfigureIOPorts() {
     MAP_GPIOIntRegister(GPIO_PORTE_BASE, &PortEIntHandler);
     MAP_GPIOIntEnable(GPIO_PORTE_BASE, GPIO_INT_PIN_1);
 
-//////// Port C
+//////// Port B
 
     // Enable and wait for the port to be ready for access
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
-    while (!MAP_SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOC)) {}
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+    while (!MAP_SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOB)) {}
 
-    // Configure the pins C4, C5, C6 to be the output
-    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6);
+    // Configure the pins B[0-7] to be the output
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7);
 
 //////// Port D
 
@@ -172,11 +171,9 @@ void Timer0IntHandler(void) {
     // Clear the timer interrupt.
     MAP_TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 
-    // Set some pin value here
-    MAP_GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_3, 0x8);
-    MAP_GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_2, 0x4);
-    MAP_GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_1, 0x2);
-    MAP_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_6, 0x40);
+    // At the end of TIMER_0 duration, set these pins to HIGH
+    // These pins are kept HIGH until the next 10 Hz signal
+    MAP_GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 0xFF);
 }
 
 //*****************************************************************************
@@ -186,10 +183,9 @@ void Timer1IntHandler(void) {
     // Clear the timer interrupt.
     MAP_TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
 
-    // Set some pin value here
-    MAP_GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_4, 0x10);
-    MAP_GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_3, 0x8);
-    MAP_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_4, 0x10);
+    // At the end of TIMER_1 duration, set these pins to HIGH
+    // These pins are kept HIGH until the next 10 Hz signal
+    MAP_GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3, 0x0F);
 }
 
 //*****************************************************************************
@@ -199,10 +195,8 @@ void Timer2IntHandler(void) {
     // Clear the timer interrupt.
     MAP_TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
 
-    // Set some pin value here
-    MAP_GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_5, 0x20);
-    MAP_GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0, 0x1);
-    MAP_GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_5, 0x20);
+    // At the end of TIMER_2 duration, set these pins to HIGH
+    // These pins are kept HIGH until the next 10 Hz signal
 }
 
 //*****************************************************************************
@@ -212,7 +206,8 @@ void Timer3IntHandler(void) {
     // Clear the timer interrupt.
     MAP_TimerIntClear(TIMER3_BASE, TIMER_TIMA_TIMEOUT);
 
-    // Set some pin value here
+    // At the end of TIMER_3 duration, set these pins to HIGH
+    // These pins are kept HIGH until the next 10 Hz signal
 }
 
 //*****************************************************************************
@@ -222,7 +217,8 @@ void Timer4IntHandler(void) {
     // Clear the timer interrupt.
     MAP_TimerIntClear(TIMER4_BASE, TIMER_TIMA_TIMEOUT);
 
-    // Set some pin value here
+    // At the end of TIMER_4 duration, set these pins to HIGH
+    // These pins are kept HIGH until the next 10 Hz signal
 }
 
 //*****************************************************************************
@@ -232,7 +228,8 @@ void Timer5IntHandler(void) {
     // Clear the timer interrupt.
     MAP_TimerIntClear(TIMER5_BASE, TIMER_TIMA_TIMEOUT);
 
-    // Set some pin value here
+    // At the end of TIMER_5 duration, set these pins to HIGH
+    // These pins are kept HIGH until the next 10 Hz signal
 }
 
 void I10ToA(uint32_t value, char* result) {
@@ -311,8 +308,10 @@ void HandleCommand() {
     } else if (g_ui32UARTCommand[0] == 'W') {
         WriteDelay();
     } else if (g_ui32UARTCommand[0] == 'P') {
+        // Stop the Trigger box: no triggers
         g_ui32RunningState = false;
     } else if (g_ui32UARTCommand[0] == 'S') {
+        // Start the Trigger box: issuing triggers
         g_ui32RunningState = true;
     }
 
