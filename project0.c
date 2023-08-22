@@ -304,8 +304,10 @@ void WriteDelay() {uint8_t i = 0;
 
 void HandleCommand() {
     if        (g_ui32UARTCommand[0] == 'R') {
+        // Read delay values from TIMER channels
         ReadDelay();
     } else if (g_ui32UARTCommand[0] == 'W') {
+        // Set delay values for TIMER channels
         WriteDelay();
     } else if (g_ui32UARTCommand[0] == 'P') {
         // Stop the Trigger box: no triggers
