@@ -22,13 +22,12 @@
 //*****************************************************************************
 // Global variables
 //*****************************************************************************
-// Delay values in ms
-volatile uint32_t g_ui32Delay0;
-volatile uint32_t g_ui32Delay1;
-volatile uint32_t g_ui32Delay2;
-volatile uint32_t g_ui32Delay3;
-volatile uint32_t g_ui32Delay4;
-volatile uint32_t g_ui32Delay5;
+volatile uint32_t g_ui32Delay0_in_millisec;
+volatile uint32_t g_ui32Delay1_in_millisec;
+volatile uint32_t g_ui32Delay2_in_millisec;
+volatile uint32_t g_ui32Delay3_in_millisec;
+volatile uint32_t g_ui32Delay4_in_millisec;
+volatile uint32_t g_ui32Delay5_in_millisec;
 // UART command array
 volatile uint32_t g_ui32UARTCommand[COMMAND_LENGTH];
 volatile uint32_t g_ui32UARTCommandIndex;
@@ -56,12 +55,12 @@ void ConfigureSystemClock() {
 // Restart TIMER
 //*****************************************************************************
 void StartTimer(void) {
-    MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay0);
-    MAP_TimerLoadSet(TIMER1_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay1);
-    MAP_TimerLoadSet(TIMER2_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay2);
-    MAP_TimerLoadSet(TIMER3_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay3);
-    MAP_TimerLoadSet(TIMER4_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay4);
-    MAP_TimerLoadSet(TIMER5_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay5);
+    MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay0_in_millisec);
+    MAP_TimerLoadSet(TIMER1_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay1_in_millisec);
+    MAP_TimerLoadSet(TIMER2_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay2_in_millisec);
+    MAP_TimerLoadSet(TIMER3_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay3_in_millisec);
+    MAP_TimerLoadSet(TIMER4_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay4_in_millisec);
+    MAP_TimerLoadSet(TIMER5_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay5_in_millisec);
     // Enable the timers.
     MAP_TimerEnable(TIMER0_BASE, TIMER_A);
     MAP_TimerEnable(TIMER1_BASE, TIMER_A);
@@ -273,17 +272,17 @@ void UARTSend(const char *pui8Buffer, uint32_t ui32Count) {
 void ReadDelay() {
     char returnValue[RETURNED_LENGTH] = "     ";
     if        (g_ui32UARTCommand[1] == '0') {
-        I10ToA(g_ui32Delay0, returnValue);
+        I10ToA(g_ui32Delay0_in_millisec, returnValue);
     } else if (g_ui32UARTCommand[1] == '1') {
-        I10ToA(g_ui32Delay1, returnValue);
+        I10ToA(g_ui32Delay1_in_millisec, returnValue);
     } else if (g_ui32UARTCommand[1] == '2') {
-        I10ToA(g_ui32Delay2, returnValue);
+        I10ToA(g_ui32Delay2_in_millisec, returnValue);
     } else if (g_ui32UARTCommand[1] == '3') {
-        I10ToA(g_ui32Delay3, returnValue);
+        I10ToA(g_ui32Delay3_in_millisec, returnValue);
     } else if (g_ui32UARTCommand[1] == '4') {
-        I10ToA(g_ui32Delay4, returnValue);
+        I10ToA(g_ui32Delay4_in_millisec, returnValue);
     } else if (g_ui32UARTCommand[1] == '5') {
-        I10ToA(g_ui32Delay5, returnValue);
+        I10ToA(g_ui32Delay5_in_millisec, returnValue);
     } else {}
     UARTSend(returnValue, RETURNED_LENGTH);
 }
@@ -292,17 +291,17 @@ void WriteDelay() {uint8_t i = 0;
     char inputValue[6]   = "      ";
     for (i = 0; i < 6; i++) inputValue[i] = (char) g_ui32UARTCommand[i + 3];
     if        (g_ui32UARTCommand[1] == '0') {
-        g_ui32Delay0 = atoi(inputValue);
+        g_ui32Delay0_in_millisec = atoi(inputValue);
     } else if (g_ui32UARTCommand[1] == '1') {
-        g_ui32Delay1 = atoi(inputValue);
+        g_ui32Delay1_in_millisec = atoi(inputValue);
     } else if (g_ui32UARTCommand[1] == '2') {
-        g_ui32Delay2 = atoi(inputValue);
+        g_ui32Delay2_in_millisec = atoi(inputValue);
     } else if (g_ui32UARTCommand[1] == '3') {
-        g_ui32Delay3 = atoi(inputValue);
+        g_ui32Delay3_in_millisec = atoi(inputValue);
     } else if (g_ui32UARTCommand[1] == '4') {
-        g_ui32Delay4 = atoi(inputValue);
+        g_ui32Delay4_in_millisec = atoi(inputValue);
     } else if (g_ui32UARTCommand[1] == '5') {
-        g_ui32Delay5 = atoi(inputValue);
+        g_ui32Delay5_in_millisec = atoi(inputValue);
     } else {}
 }
 
@@ -369,12 +368,12 @@ void ConfigureUART() {
 // Main 'C' Language entry point.
 //*****************************************************************************
 int main(void) {
-    g_ui32Delay0 = 70;
-    g_ui32Delay1 = 75;
-    g_ui32Delay2 = 80;
-    g_ui32Delay3 = 85;
-    g_ui32Delay4 = 90;
-    g_ui32Delay5 = 95;
+    g_ui32Delay0_in_millisec = 70;
+    g_ui32Delay1_in_millisec = 75;
+    g_ui32Delay2_in_millisec = 80;
+    g_ui32Delay3_in_millisec = 85;
+    g_ui32Delay4_in_millisec = 90;
+    g_ui32Delay5_in_millisec = 95;
     g_ui32RunningState = true;
     ResetUARTCommand();
 
