@@ -55,6 +55,8 @@ void ConfigureSystemClock() {
 // Restart TIMER
 //*****************************************************************************
 void StartTimer(void) {
+    // If TimerLoadSet value is SysCtlClockGet, then the timer will finish in exactly 1 second
+    // If we want a X millisecond timer, the load set value has to be (SysCtlClockGet() / 1000) * X
     MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay0_in_millisec);
     MAP_TimerLoadSet(TIMER1_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay1_in_millisec);
     MAP_TimerLoadSet(TIMER2_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay2_in_millisec);
@@ -173,7 +175,7 @@ void Timer0IntHandler(void) {
 
     // At the end of TIMER_0 duration, set these pins to HIGH
     // These pins are kept HIGH until the next 10 Hz signal
-    MAP_GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 0xFF);
+    MAP_GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3, 0xFF);
 }
 
 //*****************************************************************************
@@ -185,7 +187,8 @@ void Timer1IntHandler(void) {
 
     // At the end of TIMER_1 duration, set these pins to HIGH
     // These pins are kept HIGH until the next 10 Hz signal
-    MAP_GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3, 0x0F);
+    MAP_GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 0xFF);
+
 }
 
 //*****************************************************************************
@@ -369,12 +372,12 @@ void ConfigureUART() {
 // Main 'C' Language entry point.
 //*****************************************************************************
 int main(void) {
-    g_ui32Delay0_in_millisec = 70;
-    g_ui32Delay1_in_millisec = 75;
-    g_ui32Delay2_in_millisec = 80;
-    g_ui32Delay3_in_millisec = 85;
-    g_ui32Delay4_in_millisec = 90;
-    g_ui32Delay5_in_millisec = 95;
+    g_ui32Delay0_in_millisec = 40;
+    g_ui32Delay1_in_millisec = 60;
+    g_ui32Delay2_in_millisec = 60;
+    g_ui32Delay3_in_millisec = 70;
+    g_ui32Delay4_in_millisec = 80;
+    g_ui32Delay5_in_millisec = 90;
     g_ui32RunningState = true;
     ResetUARTCommand();
 
