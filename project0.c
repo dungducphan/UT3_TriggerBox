@@ -24,10 +24,6 @@
 //*****************************************************************************
 volatile uint32_t g_ui32Delay0_in_millisec;
 volatile uint32_t g_ui32Delay1_in_millisec;
-volatile uint32_t g_ui32Delay2_in_millisec;
-volatile uint32_t g_ui32Delay3_in_millisec;
-volatile uint32_t g_ui32Delay4_in_millisec;
-volatile uint32_t g_ui32Delay5_in_millisec;
 // UART command array
 volatile uint32_t g_ui32UARTCommand[COMMAND_LENGTH];
 volatile uint32_t g_ui32UARTCommandIndex;
@@ -59,17 +55,9 @@ void StartTimer(void) {
     // If we want a X millisecond timer, the load set value has to be (SysCtlClockGet() / 1000) * X
     MAP_TimerLoadSet(TIMER0_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay0_in_millisec);
     MAP_TimerLoadSet(TIMER1_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay1_in_millisec);
-    MAP_TimerLoadSet(TIMER2_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay2_in_millisec);
-    MAP_TimerLoadSet(TIMER3_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay3_in_millisec);
-    MAP_TimerLoadSet(TIMER4_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay4_in_millisec);
-    MAP_TimerLoadSet(TIMER5_BASE, TIMER_A, MAP_SysCtlClockGet() / 1000 * g_ui32Delay5_in_millisec);
     // Enable the timers.
     MAP_TimerEnable(TIMER0_BASE, TIMER_A);
     MAP_TimerEnable(TIMER1_BASE, TIMER_A);
-    MAP_TimerEnable(TIMER2_BASE, TIMER_A);
-    MAP_TimerEnable(TIMER3_BASE, TIMER_A);
-    MAP_TimerEnable(TIMER4_BASE, TIMER_A);
-    MAP_TimerEnable(TIMER5_BASE, TIMER_A);
 }
 
 //*****************************************************************************
@@ -135,10 +123,6 @@ void ConfigureIOPorts() {
 void ConfigureTimer(void) {
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
     MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3);
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER4);
-    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER5);
 
     // Enable processor interrupts.
     MAP_IntMasterEnable();
@@ -146,24 +130,12 @@ void ConfigureTimer(void) {
     // Configure the two 32-bit periodic timers.
     MAP_TimerConfigure(TIMER0_BASE, TIMER_CFG_ONE_SHOT);
     MAP_TimerConfigure(TIMER1_BASE, TIMER_CFG_ONE_SHOT);
-    MAP_TimerConfigure(TIMER2_BASE, TIMER_CFG_ONE_SHOT);
-    MAP_TimerConfigure(TIMER3_BASE, TIMER_CFG_ONE_SHOT);
-    MAP_TimerConfigure(TIMER4_BASE, TIMER_CFG_ONE_SHOT);
-    MAP_TimerConfigure(TIMER5_BASE, TIMER_CFG_ONE_SHOT);
 
     // Setup the interrupts for the timer timeouts.
     MAP_IntEnable(INT_TIMER0A);
     MAP_IntEnable(INT_TIMER1A);
-    MAP_IntEnable(INT_TIMER2A);
-    MAP_IntEnable(INT_TIMER3A);
-    MAP_IntEnable(INT_TIMER4A);
-    MAP_IntEnable(INT_TIMER5A);
     MAP_TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
     MAP_TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
-    MAP_TimerIntEnable(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
-    MAP_TimerIntEnable(TIMER3_BASE, TIMER_TIMA_TIMEOUT);
-    MAP_TimerIntEnable(TIMER4_BASE, TIMER_TIMA_TIMEOUT);
-    MAP_TimerIntEnable(TIMER5_BASE, TIMER_TIMA_TIMEOUT);
 }
 
 //*****************************************************************************
@@ -189,50 +161,6 @@ void Timer1IntHandler(void) {
     // These pins are kept HIGH until the next 10 Hz signal
     MAP_GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, 0xFF);
 
-}
-
-//*****************************************************************************
-// The interrupt handler for TIMER2
-//*****************************************************************************
-void Timer2IntHandler(void) {
-    // Clear the timer interrupt.
-    MAP_TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
-
-    // At the end of TIMER_2 duration, set these pins to HIGH
-    // These pins are kept HIGH until the next 10 Hz signal
-}
-
-//*****************************************************************************
-// The interrupt handler for TIMER3
-//*****************************************************************************
-void Timer3IntHandler(void) {
-    // Clear the timer interrupt.
-    MAP_TimerIntClear(TIMER3_BASE, TIMER_TIMA_TIMEOUT);
-
-    // At the end of TIMER_3 duration, set these pins to HIGH
-    // These pins are kept HIGH until the next 10 Hz signal
-}
-
-//*****************************************************************************
-// The interrupt handler for TIMER4
-//*****************************************************************************
-void Timer4IntHandler(void) {
-    // Clear the timer interrupt.
-    MAP_TimerIntClear(TIMER4_BASE, TIMER_TIMA_TIMEOUT);
-
-    // At the end of TIMER_4 duration, set these pins to HIGH
-    // These pins are kept HIGH until the next 10 Hz signal
-}
-
-//*****************************************************************************
-// The interrupt handler for TIMER5
-//*****************************************************************************
-void Timer5IntHandler(void) {
-    // Clear the timer interrupt.
-    MAP_TimerIntClear(TIMER5_BASE, TIMER_TIMA_TIMEOUT);
-
-    // At the end of TIMER_5 duration, set these pins to HIGH
-    // These pins are kept HIGH until the next 10 Hz signal
 }
 
 void I10ToA(uint32_t value, char* result) {
@@ -275,14 +203,6 @@ void ReadDelay() {
         I10ToA(g_ui32Delay0_in_millisec, returnValue);
     } else if (g_ui32UARTCommand[1] == '1') {
         I10ToA(g_ui32Delay1_in_millisec, returnValue);
-    } else if (g_ui32UARTCommand[1] == '2') {
-        I10ToA(g_ui32Delay2_in_millisec, returnValue);
-    } else if (g_ui32UARTCommand[1] == '3') {
-        I10ToA(g_ui32Delay3_in_millisec, returnValue);
-    } else if (g_ui32UARTCommand[1] == '4') {
-        I10ToA(g_ui32Delay4_in_millisec, returnValue);
-    } else if (g_ui32UARTCommand[1] == '5') {
-        I10ToA(g_ui32Delay5_in_millisec, returnValue);
     } else {}
     UARTSend(returnValue, RETURNED_LENGTH);
 }
@@ -294,14 +214,6 @@ void WriteDelay() {uint8_t i = 0;
         g_ui32Delay0_in_millisec = atoi(inputValue);
     } else if (g_ui32UARTCommand[1] == '1') {
         g_ui32Delay1_in_millisec = atoi(inputValue);
-    } else if (g_ui32UARTCommand[1] == '2') {
-        g_ui32Delay2_in_millisec = atoi(inputValue);
-    } else if (g_ui32UARTCommand[1] == '3') {
-        g_ui32Delay3_in_millisec = atoi(inputValue);
-    } else if (g_ui32UARTCommand[1] == '4') {
-        g_ui32Delay4_in_millisec = atoi(inputValue);
-    } else if (g_ui32UARTCommand[1] == '5') {
-        g_ui32Delay5_in_millisec = atoi(inputValue);
     } else {}
 }
 
@@ -374,10 +286,6 @@ void ConfigureUART() {
 int main(void) {
     g_ui32Delay0_in_millisec = 40;
     g_ui32Delay1_in_millisec = 60;
-    g_ui32Delay2_in_millisec = 60;
-    g_ui32Delay3_in_millisec = 70;
-    g_ui32Delay4_in_millisec = 80;
-    g_ui32Delay5_in_millisec = 90;
     g_ui32RunningState = true;
     ResetUARTCommand();
 
