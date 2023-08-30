@@ -60,6 +60,25 @@ void StartTimer(void) {
     MAP_TimerEnable(TIMER1_BASE, TIMER_A);
 }
 
+
+//*****************************************************************************
+// Send a string to the UART.
+//*****************************************************************************
+void UARTSend(const char *pui8Buffer, uint32_t ui32Count) {
+    while (ui32Count--) {
+        // Write the next character to the UART.
+        MAP_UARTCharPutNonBlocking(UART0_BASE, *pui8Buffer++);
+    }
+}
+
+//*****************************************************************************
+// Send Trigger Event to UART
+//*****************************************************************************
+void SendTriggerEvent() {
+    char returnValue[1] = "E";
+    UARTSend(returnValue, RETURNED_LENGTH);
+}
+
 //*****************************************************************************
 // The interrupt handler for PortE1
 //*****************************************************************************
@@ -70,6 +89,7 @@ void PortEIntHandler(void) {
     // Every time PE1 change state from LOW to HIGH, an interrupt is issued
     // If PE2 is at HIGH state and the TriggerBox is in RUNNING_STATE, timers will be started
     if (MAP_GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_2) == 0x4 && g_ui32RunningState) {
+        SendTriggerEvent();
         StartTimer();
     }
 
@@ -185,18 +205,9 @@ void I10ToA(uint32_t value, char* result) {
 }
 
 //*****************************************************************************
-// Send a string to the UART.
-//*****************************************************************************
-void UARTSend(const char *pui8Buffer, uint32_t ui32Count) {
-    while (ui32Count--) {
-        // Write the next character to the UART.
-        MAP_UARTCharPutNonBlocking(UART0_BASE, *pui8Buffer++);
-    }
-}
-
-//*****************************************************************************
 // Handle UART commands
 //*****************************************************************************
+
 void ReadDelay() {
     char returnValue[RETURNED_LENGTH] = "     ";
     if        (g_ui32UARTCommand[1] == '0') {
@@ -284,8 +295,8 @@ void ConfigureUART() {
 // Main 'C' Language entry point.
 //*****************************************************************************
 int main(void) {
-    g_ui32Delay0_in_millisec = 40;
-    g_ui32Delay1_in_millisec = 60;
+    g_ui32Delay0_in_millisec = 80;
+    g_ui32Delay1_in_millisec = 80;
     g_ui32RunningState = true;
     ResetUARTCommand();
 
