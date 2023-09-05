@@ -75,7 +75,7 @@ void UARTSend(const char *pui8Buffer, uint32_t ui32Count) {
 // Send Trigger Event to UART
 //*****************************************************************************
 void SendTriggerEvent() {
-    char returnValue[1] = "E";
+    char returnValue[RETURNED_LENGTH] = "E    ";
     UARTSend(returnValue, RETURNED_LENGTH);
 }
 
@@ -89,7 +89,7 @@ void PortEIntHandler(void) {
     // Every time PE1 change state from LOW to HIGH, an interrupt is issued
     // If PE2 is at HIGH state and the TriggerBox is in RUNNING_STATE, timers will be started
     if (MAP_GPIOPinRead(GPIO_PORTE_BASE, GPIO_PIN_2) == 0x4 && g_ui32RunningState) {
-        SendTriggerEvent();
+        if (g_ui32RunningState) SendTriggerEvent();
         StartTimer();
     }
 
@@ -215,10 +215,12 @@ void ReadDelay() {
     } else if (g_ui32UARTCommand[1] == '1') {
         I10ToA(g_ui32Delay1_in_millisec, returnValue);
     } else {}
+
     UARTSend(returnValue, RETURNED_LENGTH);
 }
 
-void WriteDelay() {uint8_t i = 0;
+void WriteDelay() {
+    uint8_t i = 0;
     char inputValue[6]   = "      ";
     for (i = 0; i < 6; i++) inputValue[i] = (char) g_ui32UARTCommand[i + 3];
     if        (g_ui32UARTCommand[1] == '0') {
